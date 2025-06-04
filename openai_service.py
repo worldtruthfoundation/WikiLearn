@@ -1,5 +1,7 @@
 import openai
 import logging
+import signal
+import functools
 from config import OPENAI_API_KEY
 
 log = logging.getLogger(__name__)
@@ -9,9 +11,28 @@ log = logging.getLogger(__name__)
 # do not change this unless explicitly requested by the user
 client = openai.OpenAI(
     api_key=OPENAI_API_KEY,
-    timeout=30.0,  # 30 second timeout for better reliability
-    max_retries=1  # Single retry to avoid long waits
+    timeout=8.0,  # Short timeout to prevent server crashes
+    max_retries=0  # No retries to avoid hanging
 ) if OPENAI_API_KEY else None
+
+def timeout(seconds):
+    """Decorator to add timeout to function calls"""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            def timeout_handler(signum, frame):
+                raise TimeoutError(f"Function {func.__name__} timed out after {seconds} seconds")
+            
+            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+            signal.alarm(seconds)
+            
+            try:
+                return func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+        return wrapper
+    return decorator
 
 def generate_summary(article_title, english_level):
     """Generate an article summary using OpenAI API"""
@@ -39,12 +60,16 @@ def generate_summary(article_title, english_level):
     """
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=3000,
-            temperature=0.7
-        )
+        @timeout(10)  # 10 second timeout
+        def make_openai_call():
+            return client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=3000,
+                temperature=0.7
+            )
+        
+        response = make_openai_call()
         return response.choices[0].message.content
     except Exception as e:
         log.error(f"OpenAI error: {e}")
@@ -132,12 +157,16 @@ def generate_lesson(article_content, english_level):
     """
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=3000,
-            temperature=0.7
-        )
+        @timeout(10)  # 10 second timeout
+        def make_openai_call():
+            return client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=3000,
+                temperature=0.7
+            )
+        
+        response = make_openai_call()
         return response.choices[0].message.content
     except Exception as e:
         log.error(f"OpenAI error: {e}")
@@ -198,12 +227,16 @@ def generate_exercise(article_title, english_level, exercise_type):
     prompt = prompts.get(exercise_type, prompts['extra'])
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=2000,
-            temperature=0.7
-        )
+        @timeout(10)  # 10 second timeout
+        def make_openai_call():
+            return client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2000,
+                temperature=0.7
+            )
+        
+        response = make_openai_call()
         return response.choices[0].message.content
     except Exception as e:
         log.error(f"OpenAI error: {e}")
