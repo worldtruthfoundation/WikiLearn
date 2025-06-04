@@ -69,15 +69,22 @@ def get_category_articles(category, subcategory, images_only=False, continue_fro
     
     if 'query' in data and 'pages' in data['query']:
         for page_id, page_data in data['query']['pages'].items():
+            # Get image information
+            image_url = None
+            if 'original' in page_data:
+                image_url = page_data['original'].get('source')
+            elif 'thumbnail' in page_data:
+                image_url = page_data['thumbnail'].get('source')
+            
             # If images_only is True, skip articles without images
-            if images_only and 'original' not in page_data.get('thumbnail', {}):
+            if images_only and not image_url:
                 continue
                 
             article = {
                 'id': page_id,
                 'title': page_data.get('title', 'Untitled'),
                 'extract': page_data.get('extract', 'No description available').split('.')[0] + '.',
-                'image': page_data.get('original', {}).get('source') if 'original' in page_data else None,
+                'image': image_url,
                 'url': page_data.get('fullurl', '')
             }
             articles.append(article)

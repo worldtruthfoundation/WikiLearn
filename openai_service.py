@@ -16,7 +16,7 @@ client = openai.OpenAI(
 def generate_summary(article_title, english_level):
     """Generate an article summary using OpenAI API"""
     if not client:
-        raise Exception("OpenAI API key not configured")
+        return generate_fallback_summary(article_title, english_level)
     
     # Define complexity based on English level
     complexity = {
@@ -46,29 +46,36 @@ def generate_summary(article_title, english_level):
             temperature=0.7
         )
         return response.choices[0].message.content
-    except openai.APIConnectionError as e:
-        log.error(f"OpenAI API connection error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>Connection to OpenAI failed. Please check your internet connection and try again.</p>"
-    except openai.RateLimitError as e:
-        log.error(f"OpenAI API rate limit error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>API rate limit reached. Please wait a moment before trying again.</p>"
-    except openai.AuthenticationError as e:
-        log.error(f"OpenAI API authentication error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>API authentication failed. Please check your OpenAI API key configuration.</p>"
-    except openai.APIError as e:
-        log.error(f"OpenAI API error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>OpenAI service temporarily unavailable. Please try again later.</p>"
-    except (ConnectionError, TimeoutError) as e:
-        log.error(f"Network error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>Network connection failed. Please check your internet connection.</p>"
     except Exception as e:
-        log.error(f"Unexpected error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>Unable to generate summary at this time. Please try again later.</p>"
+        log.error(f"OpenAI error: {e}")
+        return generate_fallback_summary(article_title, english_level)
+
+def generate_fallback_summary(article_title, english_level):
+    """Generate a fallback summary when OpenAI is unavailable"""
+    level_text = {
+        'elementary': 'Elementary (A1-A2)',
+        'intermediate': 'Intermediate (B1-B2)', 
+        'professional': 'Professional (C1-C2)'
+    }.get(english_level, 'Intermediate (B1-B2)')
+    
+    return f"""
+    <h1>Summary: {article_title}</h1>
+    <h2>{level_text} English Summary</h2>
+    <p>This is an educational summary about {article_title}. The AI summary service is currently unavailable, but you can still read the full Wikipedia article above to learn more about this topic.</p>
+    <p>To practice your English skills, try reading the article and looking up any new vocabulary words you encounter. This will help improve your reading comprehension and expand your knowledge.</p>
+    <p><strong>Study Tips:</strong></p>
+    <ul>
+        <li>Read the article slowly and carefully</li>
+        <li>Write down new vocabulary words</li>
+        <li>Try to summarize each paragraph in your own words</li>
+        <li>Look for the main ideas and supporting details</li>
+    </ul>
+    """
 
 def generate_lesson(article_content, english_level):
     """Generate a comprehensive lesson using OpenAI API"""
     if not client:
-        raise Exception("OpenAI API key not configured")
+        return generate_fallback_lesson(article_content, english_level)
     
     level_description = {
         'elementary': 'A1-A2 level (elementary) - Use simple vocabulary and grammar. Focus on basic sentence structures, common everyday words, and simple present and past tenses.',
@@ -132,29 +139,55 @@ def generate_lesson(article_content, english_level):
             temperature=0.7
         )
         return response.choices[0].message.content
-    except openai.APIConnectionError as e:
-        log.error(f"OpenAI API connection error: {e}")
-        return "<h1>English Lesson</h1><p>Connection to OpenAI failed. Please check your internet connection and try again.</p>"
-    except openai.RateLimitError as e:
-        log.error(f"OpenAI API rate limit error: {e}")
-        return "<h1>English Lesson</h1><p>API rate limit reached. Please wait a moment before trying again.</p>"
-    except openai.AuthenticationError as e:
-        log.error(f"OpenAI API authentication error: {e}")
-        return "<h1>English Lesson</h1><p>API authentication failed. Please check your OpenAI API key configuration.</p>"
-    except openai.APIError as e:
-        log.error(f"OpenAI API error: {e}")
-        return "<h1>English Lesson</h1><p>OpenAI service temporarily unavailable. Please try again later.</p>"
-    except (ConnectionError, TimeoutError) as e:
-        log.error(f"Network error: {e}")
-        return "<h1>English Lesson</h1><p>Network connection failed. Please check your internet connection.</p>"
     except Exception as e:
-        log.error(f"Unexpected error: {e}")
-        return "<h1>English Lesson</h1><p>Unable to generate lesson at this time. Please try again later.</p>"
+        log.error(f"OpenAI error: {e}")
+        return generate_fallback_lesson(article_content, english_level)
+
+def generate_fallback_lesson(article_content, english_level):
+    """Generate a fallback lesson when OpenAI is unavailable"""
+    article_title = "Learning Topic"
+    level_text = {
+        'elementary': 'Elementary (A1-A2)',
+        'intermediate': 'Intermediate (B1-B2)', 
+        'professional': 'Professional (C1-C2)'
+    }.get(english_level, 'Intermediate (B1-B2)')
+    
+    return f"""
+    <h1>English Lesson</h1>
+    <h2>{level_text} Level</h2>
+    <p>The AI lesson generator is currently unavailable. However, you can still practice your English with this article using these learning activities:</p>
+    
+    <h2>1. Reading Comprehension</h2>
+    <p>Read the Wikipedia article above carefully and practice these skills:</p>
+    <ul>
+        <li>Identify the main topic and key points</li>
+        <li>Look for new vocabulary words</li>
+        <li>Notice sentence structures and grammar patterns</li>
+    </ul>
+    
+    <h2>2. Vocabulary Practice</h2>
+    <p>As you read, write down:</p>
+    <ul>
+        <li>Words you don't know</li>
+        <li>Technical terms related to the topic</li>
+        <li>Phrases that seem important</li>
+    </ul>
+    
+    <h2>3. Discussion Questions</h2>
+    <ol>
+        <li>What is the main subject of this article?</li>
+        <li>What new information did you learn?</li>
+        <li>How does this topic connect to your interests or daily life?</li>
+    </ol>
+    
+    <h2>4. Writing Exercise</h2>
+    <p>Try to write a short summary of the article in your own words. This will help you practice expressing ideas clearly in English.</p>
+    """
 
 def generate_exercise(article_title, english_level, exercise_type):
     """Generate specific exercises using OpenAI API"""
     if not client:
-        raise Exception("OpenAI API key not configured")
+        return generate_fallback_exercise(article_title, english_level, exercise_type)
     
     prompts = {
         'grammar': f"Create grammar exercises based on '{article_title}' for {english_level} level learners. Include 10 exercises with explanations.",
@@ -172,21 +205,57 @@ def generate_exercise(article_title, english_level, exercise_type):
             temperature=0.7
         )
         return response.choices[0].message.content
-    except openai.APIConnectionError as e:
-        log.error(f"OpenAI API connection error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>Connection to OpenAI failed. Please check your internet connection and try again.</p>"
-    except openai.RateLimitError as e:
-        log.error(f"OpenAI API rate limit error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>API rate limit reached. Please wait a moment before trying again.</p>"
-    except openai.AuthenticationError as e:
-        log.error(f"OpenAI API authentication error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>API authentication failed. Please check your OpenAI API key configuration.</p>"
-    except openai.APIError as e:
-        log.error(f"OpenAI API error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>OpenAI service temporarily unavailable. Please try again later.</p>"
-    except (ConnectionError, TimeoutError) as e:
-        log.error(f"Network error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>Network connection failed. Please check your internet connection.</p>"
     except Exception as e:
-        log.error(f"Unexpected error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>Unable to generate exercises at this time. Please try again later.</p>"
+        log.error(f"OpenAI error: {e}")
+        return generate_fallback_exercise(article_title, english_level, exercise_type)
+
+def generate_fallback_exercise(article_title, english_level, exercise_type):
+    """Generate fallback exercises when OpenAI is unavailable"""
+    level_text = {
+        'elementary': 'Elementary (A1-A2)',
+        'intermediate': 'Intermediate (B1-B2)', 
+        'professional': 'Professional (C1-C2)'
+    }.get(english_level, 'Intermediate (B1-B2)')
+    
+    if exercise_type == 'grammar':
+        return f"""
+        <h1>Grammar Exercise - {level_text}</h1>
+        <p>The AI exercise generator is currently unavailable. Practice grammar with these activities related to {article_title}:</p>
+        
+        <h2>Grammar Practice Activities</h2>
+        <ol>
+            <li><strong>Sentence Analysis:</strong> Find 5 complex sentences in the article and identify the main clause and subordinate clauses.</li>
+            <li><strong>Tense Practice:</strong> Look for examples of different verb tenses in the article and write down 3 examples of each tense you find.</li>
+            <li><strong>Article Usage:</strong> Notice how "a," "an," and "the" are used in the text. Write down 10 examples.</li>
+            <li><strong>Passive Voice:</strong> Find sentences written in passive voice and rewrite them in active voice.</li>
+            <li><strong>Conditional Sentences:</strong> Look for any conditional statements and identify their type.</li>
+        </ol>
+        """
+    elif exercise_type == 'vocabulary':
+        return f"""
+        <h1>Vocabulary Exercise - {level_text}</h1>
+        <p>The AI exercise generator is currently unavailable. Practice vocabulary with these activities related to {article_title}:</p>
+        
+        <h2>Vocabulary Building Activities</h2>
+        <ol>
+            <li><strong>Word Collection:</strong> Find 20 new vocabulary words from the article and write their definitions.</li>
+            <li><strong>Context Clues:</strong> Choose 10 difficult words and try to guess their meaning from context before looking them up.</li>
+            <li><strong>Word Families:</strong> Find words that belong to the same word family (e.g., create, creation, creative).</li>
+            <li><strong>Synonyms and Antonyms:</strong> For 15 key words from the article, find synonyms and antonyms.</li>
+            <li><strong>Usage Practice:</strong> Write original sentences using 10 new vocabulary words from the article.</li>
+        </ol>
+        """
+    else:
+        return f"""
+        <h1>Extra Practice Exercise - {level_text}</h1>
+        <p>The AI exercise generator is currently unavailable. Practice English with these activities related to {article_title}:</p>
+        
+        <h2>Comprehensive Practice Activities</h2>
+        <ol>
+            <li><strong>Summary Writing:</strong> Write a 150-word summary of the article in your own words.</li>
+            <li><strong>Question Formation:</strong> Create 10 questions about the article content that test comprehension.</li>
+            <li><strong>Opinion Essay:</strong> Write a short essay expressing your opinion about the topic (200-300 words).</li>
+            <li><strong>Presentation Prep:</strong> Prepare a 5-minute presentation about the topic for classmates.</li>
+            <li><strong>Research Extension:</strong> Find one additional source about this topic and compare the information.</li>
+        </ol>
+        """
