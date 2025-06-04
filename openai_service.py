@@ -116,10 +116,10 @@ def generate_fallback_summary(article_title, english_level):
     </ul>
     """
 
-def generate_lesson(article_content, english_level):
+def generate_lesson(article_title, english_level):
     """Generate a comprehensive lesson using OpenAI API"""
     if not client:
-        return generate_fallback_lesson(article_content, english_level)
+        return generate_fallback_lesson(article_title, english_level)
     
     level_description = {
         'elementary': 'A1-A2 level (elementary) - Use simple vocabulary and grammar. Focus on basic sentence structures, common everyday words, and simple present and past tenses.',
@@ -172,7 +172,7 @@ def generate_lesson(article_content, english_level):
     Use proper HTML formatting with tables for all exercises. Make the lesson engaging, practical, and focused on real language use.
     
     Article content (first 2000 characters):
-    {article_content[:2000]}
+    {article_title[:2000]}
     """
     
     try:
@@ -188,7 +188,7 @@ def generate_lesson(article_content, english_level):
         return response.choices[0].message.content
     except Exception as e:
         log.error(f"OpenAI error: {e}")
-        return generate_fallback_lesson(article_content, english_level)
+        return generate_fallback_lesson(article_title, english_level)
 
 def generate_fallback_lesson(article_content, english_level):
     """Generate a fallback lesson when OpenAI is unavailable"""

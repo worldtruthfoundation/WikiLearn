@@ -110,11 +110,11 @@ def api_generate_summary():
 def api_generate_lesson():
     """Generate lesson plan using OpenAI"""
     data = request.get_json()
-    article_content = data.get("article_content")
     english_level = data.get("english_level", "intermediate")
+    article_title = data.get("article_title")  
     
     try:
-        lesson = generate_lesson(article_content, english_level)
+        lesson = generate_lesson(article_title, english_level)
         return jsonify({"success": True, "lesson": lesson})
     except Exception as e:
         log.error(f"Lesson generation failed: {e}")
