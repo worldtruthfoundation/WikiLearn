@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 # do not change this unless explicitly requested by the user
 client = openai.OpenAI(
     api_key=OPENAI_API_KEY,
-    timeout=8.0,  # Short timeout to prevent server crashes
+    timeout=90.0,  # Short timeout to prevent server crashes
     max_retries=0  # No retries to avoid hanging
 ) if OPENAI_API_KEY else None
 
