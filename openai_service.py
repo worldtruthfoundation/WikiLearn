@@ -3,6 +3,8 @@ import logging
 import signal
 import functools
 from config import OPENAI_API_KEY
+import openai, logging, functools, platform
+import time, random, concurrent.futures
 
 log = logging.getLogger(__name__)
 
@@ -11,27 +13,45 @@ log = logging.getLogger(__name__)
 # do not change this unless explicitly requested by the user
 client = openai.OpenAI(
     api_key=OPENAI_API_KEY,
-    timeout=90.0,  # Short timeout to prevent server crashes
+    timeout=120.0,  # Short timeout to prevent server crashes
     max_retries=0  # No retries to avoid hanging
 ) if OPENAI_API_KEY else None
 
-def timeout(seconds):
-    """Decorator to add timeout to function calls"""
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            def timeout_handler(signum, frame):
-                raise TimeoutError(f"Function {func.__name__} timed out after {seconds} seconds")
-            
-            old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-            signal.alarm(seconds)
-            
-            try:
-                return func(*args, **kwargs)
-            finally:
-                signal.alarm(0)
-                signal.signal(signal.SIGALRM, old_handler)
-        return wrapper
+
+def with_retry(fn, attempts=4, base=3):
+    for n in range(attempts):
+        try:
+            return fn()
+        except openai.error.Timeout:
+            wait = base * 2**n + random.random()
+            log.warning("Timeout, retrying in %.1fs (%d/%d)", wait, n+1, attempts)
+            time.sleep(wait)
+    raise TimeoutError("Too many timeouts")
+
+def timeout(seconds: int):
+    """Cross-platform timeout decorator (SIGALRM on Unix, ThreadPool on Win)."""
+    def decorator(fn):
+        if platform.system() != 'Windows':
+            import signal
+            def wrapper(*a, **kw):
+                def _handler(signum, frame):
+                    raise TimeoutError(f"{fn.__name__} timed out after {seconds}s")
+                old = signal.signal(signal.SIGALRM, _handler)
+                signal.alarm(seconds)
+                try:
+                    return fn(*a, **kw)
+                finally:
+                    signal.alarm(0)
+                    signal.signal(signal.SIGALRM, old)
+        else:
+            def wrapper(*a, **kw):
+                with concurrent.futures.ThreadPoolExecutor() as ex:
+                    fut = ex.submit(fn, *a, **kw)
+                    try:
+                        return fut.result(timeout=seconds)
+                    except concurrent.futures.TimeoutError:
+                        raise TimeoutError(f"{fn.__name__} timed out after {seconds}s")
+        return functools.wraps(fn)(wrapper)
     return decorator
 
 def generate_summary(article_title, english_level):
@@ -60,7 +80,6 @@ def generate_summary(article_title, english_level):
     """
     
     try:
-        @timeout(10)  # 10 second timeout
         def make_openai_call():
             return client.chat.completions.create(
                 model="gpt-4o",
@@ -157,7 +176,6 @@ def generate_lesson(article_content, english_level):
     """
     
     try:
-        @timeout(10)  # 10 second timeout
         def make_openai_call():
             return client.chat.completions.create(
                 model="gpt-4o",
@@ -227,7 +245,6 @@ def generate_exercise(article_title, english_level, exercise_type):
     prompt = prompts.get(exercise_type, prompts['extra'])
     
     try:
-        @timeout(10)  # 10 second timeout
         def make_openai_call():
             return client.chat.completions.create(
                 model="gpt-4o",
