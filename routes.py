@@ -110,8 +110,9 @@ def api_generate_summary():
 def api_generate_lesson():
     """Generate lesson plan using OpenAI"""
     data = request.get_json()
-    english_level = data.get("english_level", "intermediate")
     article_title = data.get("article_title")  
+    english_level = data.get("english_level", "intermediate")
+
     
     try:
         lesson = generate_lesson(article_title, english_level)

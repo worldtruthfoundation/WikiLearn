@@ -142,7 +142,7 @@ function generateBasicSummary(articleTitle, englishLevel, summaryContent) {
 }
 
 // Function to generate a lesson using OpenAI API
-function generateLessonWithOpenAI(articleContent, englishLevel) {
+function generateLessonWithOpenAI(articleTitle, englishLevel) {
     // Get the lesson container
     const lessonContainer = document.getElementById('lesson-container');
     if (!lessonContainer) return;
@@ -157,7 +157,7 @@ function generateLessonWithOpenAI(articleContent, englishLevel) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            article_content: articleContent,
+            article_title: articleTitle,
             english_level: englishLevel
         })
     })

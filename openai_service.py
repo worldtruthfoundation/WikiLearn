@@ -116,7 +116,9 @@ def generate_fallback_summary(article_title, english_level):
     </ul>
     """
 
-def generate_lesson(article_title, english_level):
+def generate_lesson(article_title: str, english_level: str) -> str:
+    if not article_title:
+        raise ValueError("article_title is required")
     """Generate a comprehensive lesson using OpenAI API"""
     if not client:
         return generate_fallback_lesson(article_title, english_level)
@@ -171,8 +173,8 @@ def generate_lesson(article_title, english_level):
     
     Use proper HTML formatting with tables for all exercises. Make the lesson engaging, practical, and focused on real language use.
     
-    Article content (first 2000 characters):
-    {article_title[:2000]}
+    Article title:
+    {article_title}
     """
     
     try:
