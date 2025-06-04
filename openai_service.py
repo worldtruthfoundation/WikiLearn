@@ -4,13 +4,13 @@ from config import OPENAI_API_KEY
 
 log = logging.getLogger(__name__)
 
-# Initialize OpenAI client with timeout settings
+# Initialize OpenAI client with improved timeout settings
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
 client = openai.OpenAI(
     api_key=OPENAI_API_KEY,
-    timeout=60.0,  # 60 second timeout
-    max_retries=2  # Retry failed requests twice
+    timeout=30.0,  # 30 second timeout for better reliability
+    max_retries=1  # Single retry to avoid long waits
 ) if OPENAI_API_KEY else None
 
 def generate_summary(article_title, english_level):
@@ -48,16 +48,22 @@ def generate_summary(article_title, english_level):
         return response.choices[0].message.content
     except openai.APIConnectionError as e:
         log.error(f"OpenAI API connection error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>Unable to generate AI summary due to connection issues. Please try again later or check your internet connection.</p>"
+        return f"<h1>Summary: {article_title}</h1><p>Connection to OpenAI failed. Please check your internet connection and try again.</p>"
     except openai.RateLimitError as e:
         log.error(f"OpenAI API rate limit error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>Rate limit exceeded. Please wait a moment before trying again.</p>"
+        return f"<h1>Summary: {article_title}</h1><p>API rate limit reached. Please wait a moment before trying again.</p>"
+    except openai.AuthenticationError as e:
+        log.error(f"OpenAI API authentication error: {e}")
+        return f"<h1>Summary: {article_title}</h1><p>API authentication failed. Please check your OpenAI API key configuration.</p>"
     except openai.APIError as e:
         log.error(f"OpenAI API error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>Unable to generate AI summary. Please try again later.</p>"
+        return f"<h1>Summary: {article_title}</h1><p>OpenAI service temporarily unavailable. Please try again later.</p>"
+    except (ConnectionError, TimeoutError) as e:
+        log.error(f"Network error: {e}")
+        return f"<h1>Summary: {article_title}</h1><p>Network connection failed. Please check your internet connection.</p>"
     except Exception as e:
         log.error(f"Unexpected error: {e}")
-        return f"<h1>Summary: {article_title}</h1><p>An unexpected error occurred. Please try again later.</p>"
+        return f"<h1>Summary: {article_title}</h1><p>Unable to generate summary at this time. Please try again later.</p>"
 
 def generate_lesson(article_content, english_level):
     """Generate a comprehensive lesson using OpenAI API"""
@@ -128,16 +134,22 @@ def generate_lesson(article_content, english_level):
         return response.choices[0].message.content
     except openai.APIConnectionError as e:
         log.error(f"OpenAI API connection error: {e}")
-        return "<h1>English Lesson</h1><p>Unable to generate lesson due to connection issues. Please check your OpenAI API key and try again later.</p>"
+        return "<h1>English Lesson</h1><p>Connection to OpenAI failed. Please check your internet connection and try again.</p>"
     except openai.RateLimitError as e:
         log.error(f"OpenAI API rate limit error: {e}")
-        return "<h1>English Lesson</h1><p>Rate limit exceeded. Please wait a moment before trying again.</p>"
+        return "<h1>English Lesson</h1><p>API rate limit reached. Please wait a moment before trying again.</p>"
+    except openai.AuthenticationError as e:
+        log.error(f"OpenAI API authentication error: {e}")
+        return "<h1>English Lesson</h1><p>API authentication failed. Please check your OpenAI API key configuration.</p>"
     except openai.APIError as e:
         log.error(f"OpenAI API error: {e}")
-        return "<h1>English Lesson</h1><p>Unable to generate lesson. Please verify your OpenAI API key and try again.</p>"
+        return "<h1>English Lesson</h1><p>OpenAI service temporarily unavailable. Please try again later.</p>"
+    except (ConnectionError, TimeoutError) as e:
+        log.error(f"Network error: {e}")
+        return "<h1>English Lesson</h1><p>Network connection failed. Please check your internet connection.</p>"
     except Exception as e:
         log.error(f"Unexpected error: {e}")
-        return "<h1>English Lesson</h1><p>An unexpected error occurred. Please try again later.</p>"
+        return "<h1>English Lesson</h1><p>Unable to generate lesson at this time. Please try again later.</p>"
 
 def generate_exercise(article_title, english_level, exercise_type):
     """Generate specific exercises using OpenAI API"""
@@ -162,13 +174,19 @@ def generate_exercise(article_title, english_level, exercise_type):
         return response.choices[0].message.content
     except openai.APIConnectionError as e:
         log.error(f"OpenAI API connection error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>Unable to generate exercises due to connection issues. Please try again later.</p>"
+        return f"<h1>{exercise_type.title()} Exercise</h1><p>Connection to OpenAI failed. Please check your internet connection and try again.</p>"
     except openai.RateLimitError as e:
         log.error(f"OpenAI API rate limit error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>Rate limit exceeded. Please wait a moment before trying again.</p>"
+        return f"<h1>{exercise_type.title()} Exercise</h1><p>API rate limit reached. Please wait a moment before trying again.</p>"
+    except openai.AuthenticationError as e:
+        log.error(f"OpenAI API authentication error: {e}")
+        return f"<h1>{exercise_type.title()} Exercise</h1><p>API authentication failed. Please check your OpenAI API key configuration.</p>"
     except openai.APIError as e:
         log.error(f"OpenAI API error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>Unable to generate exercises. Please verify your OpenAI API key and try again.</p>"
+        return f"<h1>{exercise_type.title()} Exercise</h1><p>OpenAI service temporarily unavailable. Please try again later.</p>"
+    except (ConnectionError, TimeoutError) as e:
+        log.error(f"Network error: {e}")
+        return f"<h1>{exercise_type.title()} Exercise</h1><p>Network connection failed. Please check your internet connection.</p>"
     except Exception as e:
         log.error(f"Unexpected error: {e}")
-        return f"<h1>{exercise_type.title()} Exercise</h1><p>An unexpected error occurred. Please try again later.</p>"
+        return f"<h1>{exercise_type.title()} Exercise</h1><p>Unable to generate exercises at this time. Please try again later.</p>"
