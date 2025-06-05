@@ -179,6 +179,11 @@
     padding-left: 2rem;
 }
 
+.lesson-container img { 
+    max-width: 100%;
+    height: auto;
+}
+
 .lesson-container .question-list li::before {
     content: counter(question-counter) ".";
     position: absolute;

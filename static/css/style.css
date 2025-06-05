@@ -418,9 +418,10 @@ body {
 
 /* Article Page Styles */
 .article-container {
-    max-width: 800px;
+    max-width: 800px;   
+    width: 100%;        
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 1rem;      
 }
 
 .article-header {
@@ -767,6 +768,14 @@ body {
     .summary-content {
         padding: 1.5rem;
     }
+
+    .lesson-container table {
+      width: 100%;          
+      overflow-x: auto;     
+      display: block;
+  }
+
+
 }
 
 @media (max-width: 480px) {
@@ -802,6 +811,10 @@ body {
 
     .article-header h1 {
         font-size: 1.75rem;
+    }
+
+    .article-container { 
+        padding: .75rem; 
     }
 
     .back-btn span {
