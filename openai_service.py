@@ -239,10 +239,97 @@ def generate_exercise(article_title, english_level, exercise_type):
         return generate_fallback_exercise(article_title, english_level, exercise_type)
     
     prompts = {
-        'grammar': f"Create grammar exercises based on '{article_title}' for {english_level} level learners. Include 10 exercises with explanations.",
-        'vocabulary': f"Create vocabulary exercises based on '{article_title}' for {english_level} level learners. Include word definitions, synonyms, and usage examples.",
-        'extra': f"Create additional practice exercises based on '{article_title}' for {english_level} level learners. Include creative writing prompts and critical thinking questions."
-    }
+        "grammar": f"""
+You are an experienced ESL content writer.
+
+Create exactly **10 grammar exercises** based on the article “{article_title}”.
+Take into account the learners’ level: **{english_level}**.
+Focus on 1-2 grammar points that the article naturally illustrates (e.g. Past Simple vs Present Perfect, passive voice, modal verbs).
+
+Return the output as **pure HTML** using *exactly* this skeleton:
+
+<div class="lesson-section">
+  <h2>Grammar Exercises</h2>
+  <ol>
+    <!-- Repeat 10× -->
+    <li>
+      📄 <strong>Question #{{n}}:</strong> <em>write the question here</em>
+      <details><summary>Show answer</summary>Correct answer + brief explanation (1–2 sentences).</details>
+    </li>
+    <!-- … -->
+  </ol>
+</div>
+""",
+
+        "vocabulary": f"""
+You are an ESL materials writer.
+
+Select **12 key words / phrases** from the article “{article_title}” that a **{english_level}** learner should know.
+
+For each word provide:  
+1. The word itself.  
+2. A concise definition (≤ 15 words, plain English).  
+3. An example sentence from the article context with the word **blanked**: use “_____”.
+
+Return strictly **HTML** with this structure:
+
+<div class="lesson-section">
+  <h2>Vocabulary Trainer</h2>
+  <table>
+    <thead><tr>
+      <th>Word</th><th>Definition</th><th>Example (gap-fill)</th>
+    </tr></thead>
+    <tbody>
+      <!-- 12 rows -->
+      <tr>
+        <td>example</td><td>a thing that …</td><td>He gave an _____ of …</td>
+      </tr>
+      <!-- … -->
+    </tbody>
+  </table>
+  <p><em>Answers:</em></p>
+  <ol>
+    <!-- 12 answers to the gap-fill sentences -->
+    <li>1 — example</li>
+    <!-- … -->
+  </ol>
+</div>
+""",
+        "extra": f"""
+You are an ESL lesson designer.
+
+Create an “Extra Practice” block for the article “{article_title}”, level **{english_level}**.
+
+Content:  
+* **5 comprehension questions** (factual, answerable from the text).  
+* **5 discussion prompts** (open-ended opinion questions).  
+* **1 short writing task** (≈ 60 words) related to the topic.
+
+Output **pure HTML** exactly like this:
+
+<div class="lesson-section">
+  <h2>Extra Practice</h2>
+
+  <h3>Comprehension Check</h3>
+  <ol>
+    <!-- 5× -->
+    <li>
+      Question #{{n}}
+      <details><summary>Show answer</summary>Answer sentence.</details>
+    </li>
+  </ol>
+
+  <h3>Discuss</h3>
+  <ul>
+    <!-- 5× -->
+    <li>Open question #{{n}}</li>
+  </ul>
+
+  <h3>Writing Task</h3>
+  <p>Write ≈60 words: <em>prompt text…</em></p>
+</div>
+"""
+}
     
     prompt = prompts.get(exercise_type, prompts['extra'])
     
